@@ -29,7 +29,8 @@ def merge_mask_image(mask, im0s, name, retval):
     mask_h, mask_w = mask_logits.shape[0], mask_logits.shape[1]
     im0s_roi = im0s[int(boxes[0][1]):int(boxes[0][1]+mask_h), int(boxes[0][0]):int(boxes[0][0]+mask_w)]
     retval_bg = np.zeros((im0s_roi.shape[0], im0s_roi.shape[1],3), np.uint8)
-    retval_bg = cv2.ellipse(retval_bg, retval, (0, 0, 255), thickness=-1)
+    for i in range(len(retval)):
+        retval_bg = cv2.ellipse(retval_bg, retval[i], (0, 255, 0), thickness=-1)
     # det = cv2.addWeighted(im0s_roi,0.7 ,mask_logits, 0.3, 0)
     det = cv2.addWeighted(im0s_roi,0.7 ,retval_bg, 0.3, 0)
     im0s[int(boxes[0][1]):int(boxes[0][1]+mask_h), int(boxes[0][0]):int(boxes[0][0]+mask_w)] = det
@@ -66,7 +67,12 @@ def model_detection(image, yolo, mask_head, cfg):
     mask_logits = cv2.cvtColor(mask_logits, cv2.COLOR_GRAY2RGB)
 
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    retval = cv2.fitEllipse(contours[0])
+    print(len(contours))
+    retval = []
+    for i in range(len(contours)):
+        if contours[i].shape[0]<5: # filter the number of points under five
+            continue
+        retval.append(cv2.fitEllipse(contours[i]))
     e1= time.time()
     print( 'fitEllipse',(e1-s1)*1000, 'ms')
     return boxes, mask_logits, retval
