@@ -98,17 +98,25 @@ class ROIHeadsMask(nn.Module):
     
     def forward(
         self,
-        features,
+        features_0,
+        features_1,
+        features_2,
         proposals,
         image_shapes=[(640,640)],
         targets=None):
 
         mask_proposals = [proposals]
-
-        features['feat1'] = self.featurealign1(features['feat1'])
-        features['feat2'] = self.featurealign2(features['feat2'])
-        features['feat3'] = self.featurealign3(features['feat3'])
-
+        
+        features_0 = self.featurealign1(features_0)
+        features_1 = self.featurealign2(features_1)
+        features_2 = self.featurealign3(features_2)
+        
+        features = {}
+        key_name = ["feat1","feat2","feat3"]
+        feature_map = [features_0,features_1,features_2]
+        for i,j in zip(key_name, feature_map):
+            features[i] = j
+        
         if self.mask_roi_pool is not None:
             mask_features = self.mask_roi_pool(features, mask_proposals, image_shapes)
             mask_features = self.mask_head(mask_features)
@@ -132,9 +140,16 @@ def convertPredList2Tensor(pred):
         for i in range(lenList):
             pred[key][i] = torch.FloatTensor( pred[key][i])
 
+# def featuremapPack(feature_map):
+#     from collections import OrderedDict
+#     map = OrderedDict()
+#     key_name = ["feat1","feat2","feat3"]
+#     for i,j in zip(key_name, feature_map):
+#         map[i] = j
+#     return map
+
 def featuremapPack(feature_map):
-    from collections import OrderedDict
-    map = OrderedDict()
+    map = {}
     key_name = ["feat1","feat2","feat3"]
     for i,j in zip(key_name, feature_map):
         map[i] = j
@@ -155,7 +170,6 @@ if __name__ == '__main__':
     convertPredList2Tensor(feat)
     #   packing feature map
     feature_map = featuremapPack(feat)
-    print(feat)
     boxes = rois
 
     roiHead = ROIHeadsMask()

@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.15.0-46-generic-x86_64-with-glibc2.29",
+    "python": "3.8.10",
+    "heartbeatAt": "2022-09-19T07:06:14.130934",
+    "startedAt": "2022-09-19T07:06:10.355420",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "gpu_count": 1,
+    "cpu_count": 16,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/insign/Doc/insign/Mask_yolo/utils/train.py",
+    "codePath": "utils/train.py",
+    "git": {
+        "remote": "https://github.com/a227799770055/MASK_YOLO.git",
+        "commit": "69e3b93acc81270a954e68ffba4b21600ded6aeb"
+    },
+    "email": "a227799770055@gmail.com",
+    "root": "/home/insign/Doc/insign/Mask_yolo",
+    "host": "insign-Z590-AORUS-PRO-AX",
+    "username": "insign",
+    "executable": "/bin/python3"
+}

@@ -2,7 +2,7 @@ model:
   weight: '/home/insign/Doc/insign/flexible-yolov5/Polyp/AI_box_0706_toTRT/weights/best.pt'
 
 maskrcnn:
-  weight: "run/0829_sie640_roi28/best.pt"
+  weight: 
 
 nms:
   conf_thres: 0.5

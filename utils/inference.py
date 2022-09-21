@@ -26,13 +26,15 @@ def image_loading(img_path):
     return image, im0s, img_h, img_w
 
 def merge_mask_image(mask, im0s, name, retval):
-    mask_h, mask_w = mask_logits.shape[0], mask_logits.shape[1]
-    im0s_roi = im0s[int(boxes[0][1]):int(boxes[0][1]+mask_h), int(boxes[0][0]):int(boxes[0][0]+mask_w)]
-    retval_bg = np.zeros((im0s_roi.shape[0], im0s_roi.shape[1],3), np.uint8)
+    mask_h, mask_w = mask.shape[0], mask.shape[1]
+    det = im0s[int(boxes[0][1]):int(boxes[0][1]+mask_h), int(boxes[0][0]):int(boxes[0][0]+mask_w)]
+    retval_bg = np.zeros((det.shape[0], det.shape[1],3), np.uint8)
     for i in range(len(retval)):
-        retval_bg = cv2.ellipse(retval_bg, retval[i], (0, 255, 0), thickness=-1)
-    # det = cv2.addWeighted(im0s_roi,0.7 ,mask_logits, 0.3, 0)
-    det = cv2.addWeighted(im0s_roi,0.7 ,retval_bg, 0.3, 0)
+        retval_bg = cv2.ellipse(retval_bg, retval[i], (255, 255, 255), thickness=-1)
+    # a = cv2.addWeighted(retval_bg,0.5 ,mask, 0.5, 0)
+    mask = mask+retval_bg
+    det = cv2.addWeighted(det,0.7 ,mask, 0.3, 0)
+    
     im0s[int(boxes[0][1]):int(boxes[0][1]+mask_h), int(boxes[0][0]):int(boxes[0][0]+mask_w)] = det
     return im0s
 
@@ -42,7 +44,7 @@ def model_detection(image, yolo, mask_head, cfg):
     rois = non_max_suppression(pred['rois'][0],cfg['nms']['conf_thres'], cfg['nms']['iou_thres'], classes= cfg['nms']['classes'],agnostic=cfg['nms']['agnostic_nms'])
     boxes = rois[0][:,:4]#  rois
     if len(boxes) == 0:
-        return [], []
+        return [], [], []
     feature_map = featuremapPack(pred['feature_map']) #   extract feature map and boxes
     cv2.rectangle(im0s, (int(boxes[0][0]), int(boxes[0][1])), (int(boxes[0][2]), int(boxes[0][3])), (0, 255, 0), 2)
 
@@ -63,18 +65,17 @@ def model_detection(image, yolo, mask_head, cfg):
     # kernel = np.ones((5,5),np.uint8)
     # mask_logits =  cv2.erode(mask_logits,kernel,iterations = 3)
     # mask_logits =  cv2.dilate(mask_logits,kernel,iterations = 5)
-    s1= time.time()
     mask_logits = cv2.cvtColor(mask_logits, cv2.COLOR_GRAY2RGB)
 
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    print(len(contours))
     retval = []
     for i in range(len(contours)):
         if contours[i].shape[0]<5: # filter the number of points under five
             continue
-        retval.append(cv2.fitEllipse(contours[i]))
-    e1= time.time()
-    print( 'fitEllipse',(e1-s1)*1000, 'ms')
+        ellipse = cv2.fitEllipse(contours[i])
+        ellipse, ellipse[1] = list(ellipse), list(ellipse[1])
+        ellipse[1][0], ellipse[1][1] = ellipse[1][0]*1, ellipse[1][1]*1
+        retval.append(ellipse)
     return boxes, mask_logits, retval
 
     
@@ -100,20 +101,15 @@ if __name__ == '__main__':
 
     imgs = os.listdir(imgDir)
     for i in imgs:
+        print(i)
         imgPath = os.path.join(imgDir, i)
         name = i.split('.')[0]
-        
         s = time.time()
         #   Image loading
         image, im0s, img_h, img_w = image_loading(imgPath)
 
         #   prediction
-        
-        s2 = time.time()
         boxes, mask_logits, retval = model_detection(image, yolo, mask_head, cfg)
-        e2 = time.time()
-        print('Mask Predict', (e2-s2)*1000, 'ms')
-        
         if len(boxes) != 0:
             #   Merge mask and image
             im0s = merge_mask_image(mask=mask_logits, im0s=im0s, name=name, retval=retval)

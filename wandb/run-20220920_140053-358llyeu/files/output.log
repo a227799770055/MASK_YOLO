@@ -1,0 +1,19 @@
+Training:-
+----------
+Epoch 0/199
+train
+  0%|                                                                                                         | 0/5634 [00:00<?, ?it/s]/usr/local/lib/python3.8/dist-packages/torch/functional.py:568: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at  ../aten/src/ATen/native/TensorShape.cpp:2228.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+  0%|                                                                                                         | 0/5634 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/insign/Doc/insign/Mask_yolo/utils/train.py", line 150, in <module>
+    best_model = train_model(
+  File "/home/insign/Doc/insign/Mask_yolo/utils/train.py", line 55, in train_model
+    mask_logits = model(feature_map[0], feature_map[1],feature_map[2], boxes)
+KeyError: 0
+Traceback (most recent call last):
+  File "/home/insign/Doc/insign/Mask_yolo/utils/train.py", line 150, in <module>
+    best_model = train_model(
+  File "/home/insign/Doc/insign/Mask_yolo/utils/train.py", line 55, in train_model
+    mask_logits = model(feature_map[0], feature_map[1],feature_map[2], boxes)
+KeyError: 0

@@ -73,7 +73,7 @@ class VideoDetection:
 
 
 def vido_detect(video_path, save_path, maskrcnn_wts, cfg):
-    print('Start to detect video video_path')
+    print('Start to detect {}'.format(video_path))
     print(' ')
     Detector = VideoDetection(maskrcnn_wts, cfg)
     cap = cv2.VideoCapture(video_path)

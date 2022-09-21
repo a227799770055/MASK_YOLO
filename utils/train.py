@@ -51,7 +51,11 @@ def train_model(model, yolo, dataloader, criterion, optimizer, num_epochs=30):
                 feature_map = featuremapPack(pred['feature_map']) #   extract feature map and boxes
                 
                 #   mask prediction
-                mask_logits = model(feature_map, boxes)
+                #   0920 reconstruct feature_map --> feature1 feature2 feature3 
+                f1,f2,f3 = pred['feature_map'][0], pred['feature_map'][1],pred['feature_map'][2]
+                mask_logits = model(f1,f2,f3, boxes)
+                #mask_logits = model(feature_map, boxes)
+
                 #   import ground true
                 mask_roi =  maskRoiAlign(mask, boxes, mask_logits.shape[-1])
                 
