@@ -1,7 +1,7 @@
 from copy import deepcopy
 from genericpath import isdir
 import sys
-sys.path.append('/home/insign/Doc/insign/Mask_yolo')
+sys.path.append('.')
 import torch
 import cv2
 import numpy as np 
@@ -290,6 +290,8 @@ def parse_opt():
     )
     opt = parser.parse_args()
     return opt
+
+
 
 if __name__ == '__main__':
     #   Input parse opt

@@ -7,7 +7,7 @@ import datetime, time, copy, yaml
 device = torch.device('cuda')
 from copy import deepcopy
 import sys, os, time
-sys.path.append('/home/insign/Doc/insign/Mask_yolo')
+sys.path.append('.')
 import torch
 import cv2
 import numpy as np 
@@ -16,11 +16,7 @@ from typing import Any
 from model.backbone_YOLO import *
 from model.head_RCNN import *
 from model.groundtrue_import import *
-from PIL import Image
-from torchvision import transforms
-
-
-
+import argparse
 
 #concat backbone + fan + pan
 class model_concat(nn.Module):
@@ -54,28 +50,45 @@ class yoloModelPack2TRT(nn.Module):
         res['rois'] = out2
         return res
 
-#%%
-toTRT = False
-#%%
-weight_path = '/home/insign/Doc/insign/flexible-yolov5/Polyp/AI_box_0706_toTRT/weights/best.pt'
+def parse_opt():
+    parser = argparse.ArgumentParser(
+        prog="yolo2trt.py",
+    )
+    parser.add_argument(
+        '--yoloPath',
+        type=str,
+        default='/home/insign/Doc/insign/flexible-yolov5/Polyp/AI_box_0706_toTRT/weights/best.pt',
+        help='path of the config.'
+    )
+    
+    opt = parser.parse_args()
+    return opt
 
-model = torch.load(weight_path)['model']
-model_backbone = model.backbone
-model_fpn = model.fpn
-model_pan = model.pan
-model_head = model.detection
-x = torch.ones((1,3,320,320)).cuda()
-model_feature_map = model_concat(model_backbone, model_fpn, model_pan).eval().cuda()
+if __name__ == '__main__':
+    toTRT = True
+    opt = parse_opt()
 
-#transfer torch to trt weight and save as pth
-if toTRT:
-    model_trt = torch2trt(model_feature_map, [x], int8_mode=True)
-    torch.save(model_trt.state_dict(), 'toTRT/MorphYolo_backbone.pth')
-    torch.save(model_head, 'toTRT/MorphYolo_head.pth')
+    weight_path = opt.yoloPath
 
-backbone = TRTModule()
-backbone.load_state_dict(torch.load('/home/insign/Doc/insign/Mask_yolo/toTRT/MorphYolo_backbone.pth'))
-head = torch.load('/home/insign/Doc/insign/Mask_yolo/toTRT/MorphYolo_head.pth')
+    model = torch.load(weight_path)['model']
+    model_backbone = model.backbone
+    model_fpn = model.fpn
+    model_pan = model.pan
+    model_head = model.detection
+    x = torch.ones((64,3,320,320)).cuda()
+    model_feature_map = model_concat(model_backbone, model_fpn, model_pan).eval().cuda()
 
-modelNew = yoloModelPack2TRT(backbone, head)
-y = modelNew(x)
+    #transfer torch to trt weight and save as pth
+    if toTRT:
+        print('start convert pytorch to tensorRT')
+        model_trt = torch2trt(model_feature_map, [x], int8_mode=True)
+        torch.save(model_trt.state_dict(), 'toTRT/MorphYolo_backbone.pth')
+        torch.save(model_head, 'toTRT/MorphYolo_head.pth')
+
+    print('test inference time')
+    trtmodel = yoloModelPack2TRT(model_trt, model_head)
+    for i in range(10):
+        s = time.time()
+        y = trtmodel(x)
+        e = time.time()
+        print('Inference time take {} ms'.format((e-s)*1000))

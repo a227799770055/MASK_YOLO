@@ -1,6 +1,6 @@
 from copy import deepcopy
 import sys, os, time
-sys.path.append('/home/insign/Doc/insign/Mask_yolo')
+sys.path.append('.')
 import torch
 import cv2
 import numpy as np 
@@ -62,10 +62,6 @@ def model_detection(image, yolo, mask_head, cfg):
     mask_logits.dtype = 'uint8'
     mask = deepcopy(mask_logits)
     mask_logits = mask_logits*255
-    #   morphology
-    # kernel = np.ones((5,5),np.uint8)
-    # mask_logits =  cv2.erode(mask_logits,kernel,iterations = 3)
-    # mask_logits =  cv2.dilate(mask_logits,kernel,iterations = 5)
     mask_logits = cv2.cvtColor(mask_logits, cv2.COLOR_GRAY2RGB)
 
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
