@@ -26,7 +26,7 @@ output path ./result
 ## Video Detection
 ```bash
 python3 utils/detect_video_sort.py  \
-        --cfgPath  config/file/path \
+        --cfgPath config/file/path \
         --videoPath video/folder/path \
         --savePath result/save/path
 ```
