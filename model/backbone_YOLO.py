@@ -1,7 +1,7 @@
 import os 
 import torch
 import sys
-sys.path.append('/home/insign/Doc/insign/Mask_yolo/model')
+sys.path.append('./model')
 import cv2
 from od.data.datasets import letterbox
 import numpy as np

@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/home/insign/Doc/insign/Mask_yolo')
+sys.path.append('.')
 import torch
 import cv2
 from torchvision.datasets.vision import VisionDataset

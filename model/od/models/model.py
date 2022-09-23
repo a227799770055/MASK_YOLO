@@ -5,7 +5,7 @@ import math
 import yaml
 import torch
 import sys
-sys.path.append('/home/insign/Doc/insign/flexible-yolov5')
+sys.path.append('./model')
 from od.models.modules.common import Conv
 from od.models.backbone import build_backbone
 from od.models.neck import build_neck

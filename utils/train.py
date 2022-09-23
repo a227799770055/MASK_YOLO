@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/home/insign/Doc/insign/Mask_yolo')
+sys.path.append('.')
 import datetime, time, copy, yaml
 import wandb
 

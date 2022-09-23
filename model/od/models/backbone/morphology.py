@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import sys
-sys.path.append('/home/insign/Doc/insign/flexible-yolov5/od')
+sys.path.append('./model')
 from od.models.modules.common import Focus, Conv, C3, SPP, BottleneckCSP, C3TR, MorphologyCNN
 from utils.general import make_divisible
 
