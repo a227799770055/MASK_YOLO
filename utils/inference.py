@@ -30,7 +30,7 @@ def merge_mask_image(mask, im0s, name, retval):
     det = im0s[int(boxes[0][1]):int(boxes[0][1]+mask_h), int(boxes[0][0]):int(boxes[0][0]+mask_w)]
     retval_bg = np.zeros((det.shape[0], det.shape[1],3), np.uint8)
     for i in range(len(retval)):
-        retval_bg = cv2.ellipse(retval_bg, retval[i], (255, 255, 255), thickness=-1)
+        retval_bg = cv2.ellipse(retval_bg, retval[i], (0, 0, 255), thickness=-1)
     # a = cv2.addWeighted(retval_bg,0.5 ,mask, 0.5, 0)
     mask = mask+retval_bg
     det = cv2.addWeighted(det,0.7 ,mask, 0.3, 0)
@@ -46,6 +46,7 @@ def model_detection(image, yolo, mask_head, cfg):
     if len(boxes) == 0:
         return [], [], []
     feature_map = featuremapPack(pred['feature_map']) #   extract feature map and boxes
+    f1,f2,f3 = pred['feature_map'][0], pred['feature_map'][1],pred['feature_map'][2]
     cv2.rectangle(im0s, (int(boxes[0][0]), int(boxes[0][1])), (int(boxes[0][2]), int(boxes[0][3])), (0, 255, 0), 2)
 
     #   Resize to bounding box
@@ -54,10 +55,10 @@ def model_detection(image, yolo, mask_head, cfg):
     resize_to_bbs = transforms.Compose([transforms.Resize((w, h))])
     
     #   Predict mask
-    mask_logits = mask_head(feature_map, boxes)
+    mask_logits = mask_head( f1,f2,f3, boxes)
     mask_logits = resize_to_bbs(mask_logits)
     mask_logits = mask_logits.detach().cpu().numpy()
-    mask_logits = mask_logits[0][0]>0.5
+    mask_logits = mask_logits[0][0]>0.6
     mask_logits.dtype = 'uint8'
     mask = deepcopy(mask_logits)
     mask_logits = mask_logits*255
@@ -75,6 +76,8 @@ def model_detection(image, yolo, mask_head, cfg):
         ellipse = cv2.fitEllipse(contours[i])
         ellipse, ellipse[1] = list(ellipse), list(ellipse[1])
         ellipse[1][0], ellipse[1][1] = ellipse[1][0]*1, ellipse[1][1]*1
+        if np.isnan(ellipse[1][0]) or np.isnan(ellipse[1][1]):
+            continue
         retval.append(ellipse)
     return boxes, mask_logits, retval
 

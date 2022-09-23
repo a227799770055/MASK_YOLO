@@ -1,0 +1,25 @@
+totrt: True
+
+model:
+  backbone: "toTRT/MorphYolo_backbone.pth"
+  headdetector: "toTRT/MorphYolo_head.pth"
+
+maskrcnn:
+  featurealign: "toTRT/featurealign.pth"
+  roipool: "toTRT/roipool.pth"
+  headdetector: "toTRT/headdetector.pth"
+
+nms:
+  conf_thres: 0.5
+  iou_thres: 0.5
+  classes: 0
+  agnostic_nms: False
+
+data:
+  root: "Polyp"
+  img_dir: "Images"
+  mask_dir: "Masks"
+
+optimizer: "Adam"
+
+num_epochs: 200
