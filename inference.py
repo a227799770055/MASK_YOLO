@@ -6,9 +6,9 @@ import cv2
 import numpy as np 
 from od.data.datasets import letterbox
 from typing import Any
-from model.backbone_YOLO import *
-from model.head_RCNN import *
-from model.groundtrue_import import *
+from backbone_YOLO import *
+from head_RCNN import *
+from groundtrue_import import *
 from PIL import Image
 from torchvision import transforms
 

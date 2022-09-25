@@ -2,11 +2,11 @@ totrt: False
 
 # yolo 權重路徑
 model:
-  weight: '/home/insign/Doc/insign/flexible-yolov5/Polyp/AI_box_0706_toTRT/weights/best.pt'
+  weight: './data/yolo_best_weight.pt'
 
 # maskrcnn 權重路徑
 maskrcnn:
-  weight: 'run/0921/best.pt'
+  weight: './data/maskrcnn_best_weight.pt'
 
 nms:
   conf_thres: 0.5
