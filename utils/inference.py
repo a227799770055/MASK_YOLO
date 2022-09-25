@@ -1,10 +1,10 @@
 from copy import deepcopy
 import sys, os, time
-sys.path.append('.')
+sys.path.append('./model')
 import torch
 import cv2
 import numpy as np 
-from model.od.data.datasets import letterbox
+from od.data.datasets import letterbox
 from typing import Any
 from model.backbone_YOLO import *
 from model.head_RCNN import *

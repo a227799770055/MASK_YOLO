@@ -6,3 +6,8 @@ Detection
 run
 result
 video
+
+wandb/
+data/
+__pycache__/
+*.pyc
