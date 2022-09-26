@@ -57,8 +57,8 @@ def parse_opt():
     parser.add_argument(
         '--yoloPath',
         type=str,
-        default='/home/insign/Doc/insign/flexible-yolov5/Polyp/AI_box_0706_toTRT/weights/best.pt',
-        help='path of the config.'
+        default='weights/yolo_best.pt',
+        help='path of the weights.'
     )
     
     opt = parser.parse_args()

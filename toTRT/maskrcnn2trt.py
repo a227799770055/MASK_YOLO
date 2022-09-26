@@ -52,8 +52,8 @@ def parse_opt():
     parser.add_argument(
         '--maskPath',
         type=str,
-        default='/home/insign/Doc/insign/Mask_yolo/run/0921/best.pt',
-        help='path of the config.'
+        default='weights/maskrcnn_best.pt',
+        help='path of the weights.'
     )
     
     opt = parser.parse_args()
