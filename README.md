@@ -34,6 +34,7 @@ python3 utils/detect_video_sort.py  \
 ## Pytorch model convert to TensorRT
 
 ### 將 yolo 權重轉換成 tensorRT
+#### pytorch weights 下載：[link](https://83516952-my.sharepoint.com/:f:/g/personal/eddie_hsiao_insign-medical_com/ElBW98W59IRFn0qhxtvYL0YBx9fSzvSwTKMFjFyc2p1e6g?e=EgAuHj)
 ```bash
 python3 toTRT/yolo2trt.py --yoloPath /home/insign/Doc/insign/flexible-yolov5/Polyp/AI_box_0706_toTRT/weights/best.pt
 ```
