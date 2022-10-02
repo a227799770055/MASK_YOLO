@@ -12,6 +12,17 @@ from groundtrue_import import *
 from PIL import Image
 from torchvision import transforms
 
+## Depth package
+import mmcv
+from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
+from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
+                         wrap_fp16_model)
+from mmcv.utils import DictAction
+
+from depth.apis import multi_gpu_test, single_gpu_test
+from depth.datasets import build_dataloader, build_dataset
+from depth.models import build_depther
+
 def image_loading(img_path):
     image = cv2.imread(str(img_path))
     img_h, img_w = image.shape[0], image.shape[1]
@@ -77,13 +88,67 @@ def model_detection(image, yolo, mask_head, cfg):
         retval.append(ellipse)
     return boxes, mask_logits, retval
 
+# dpeth
+def depth_estimation(image, model, depth_cfg):
+    # model = MMDataParallel(model, device_ids=[0])
+    model.eval()
+    resize_to_512 = transforms.Compose([transforms.Resize((512, 512))])
+    with torch.no_grad():
+        input_img = resize_to_512(image)
+        result = model(img = [input_img], img_metas = [[getFake()]], return_loss=False)[0][0]
+        result = cv2.resize(result, dsize=(640, 640), interpolation=cv2.INTER_CUBIC)
+    return result
+
+def load_depth_cfg(path):
+    cfg = mmcv.Config.fromfile(path)
+    if cfg.get('cudnn_benchmark', False):
+        torch.backends.cudnn.benchmark = True
+    cfg.model.pretrained = None
+    cfg.data.test.test_mode = True
+    return cfg
+
+def load_depth_model(cfg, pth_path):
+    model = build_depther(
+        cfg.model,
+        test_cfg=cfg.get('test_cfg'))
+    checkpoint = load_checkpoint(model, pth_path)
+    return model
+
+def getFake():
+    meta = dict()
+    meta['filename'] = 'test.png'
+    meta['ori_filename'] = 'test.png'
+    meta['ori_shape'] = (512, 512, 3)
+    meta['img_shape'] = (512, 512, 3)
+    meta['pad_shape'] = (512, 512, 3)
+    meta['scale_factor'] = [1., 1., 1., 1.]
+    meta['flip'] = False
+    meta['flip_direction'] = 'horizontal'
+    meta['to_rgb'] = True
+    return meta
+
+def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110):
+    x = int(boxes[0][0])
+    y = int(boxes[0][1])
+    h = int(boxes[0][3] - boxes[0][1])
+    w = int(boxes[0][2] - boxes[0][0])
+    px = int(x + (w / 2))
+    py = int(y + (h / 2))
+    img = cv2.circle(img, (px,py), radius=5, color=(255, 0, 0), thickness=-1)
+    text = "d: " + str(round(depth[px][py] * 16.0, 1))  + 'cm'
+    img = cv2.putText(img, text, (px, py), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 1, cv2.LINE_AA)
+    return img
     
 if __name__ == '__main__':
-    imgDir = 'Polyp/Validate'
+    imgDir = 'data/Validate'
     cfgPath = 'config/config.yaml'
+    
     #   Loading cfg
     with open(cfgPath, 'r') as f:
         cfg = yaml.load(f, Loader=yaml.Loader)
+    
+    #   Load depth cfg
+    depth_cfg = load_depth_cfg(cfg['depth']['config'])
 
     roimodelPath = cfg['maskrcnn']['weight']
 
@@ -97,6 +162,8 @@ if __name__ == '__main__':
     yolo = model_manipulate(cfg['model']['weight']).eval().to(device)
     #   Model roi_head loading
     mask_head = torch.load(roimodelPath).eval().to(device)
+    #   Model depth swint load weight
+    depthformer_net = load_depth_model(depth_cfg, cfg['depth']['weight']).to(device)
 
     imgs = os.listdir(imgDir)
     for i in imgs:
@@ -109,9 +176,12 @@ if __name__ == '__main__':
 
         #   prediction
         boxes, mask_logits, retval = model_detection(image, yolo, mask_head, cfg)
+        depth_val = depth_estimation(image, depthformer_net, depth_cfg)
+        cv2.imwrite('{}/{}_dpeth.jpg'.format(save_dir, name), depth_val * 255.)
         if len(boxes) != 0:
             #   Merge mask and image
             im0s = merge_mask_image(mask=mask_logits, im0s=im0s, name=name, retval=retval)
+            im0s = plotRealTargetSize(im0s, boxes, depth_val)
             cv2.imwrite('{}/{}_det.jpg'.format(save_dir, name),im0s)
         else:
             print("-"*15)

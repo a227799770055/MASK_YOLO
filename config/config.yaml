@@ -8,6 +8,11 @@ model:
 maskrcnn:
   weight: './data/maskrcnn_best_weight.pt'
 
+# depth
+depth:
+  config: './data/depthformer_swint_w7_endoscopy.py'
+  weight: './data/depth_best_weight.pth'
+
 nms:
   conf_thres: 0.5
   iou_thres: 0.5
