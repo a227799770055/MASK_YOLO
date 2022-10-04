@@ -34,8 +34,9 @@ python3 utils/detect_video_sort.py  \
 ## Pytorch model convert to TensorRT
 
 ### 將 yolo 權重轉換成 tensorRT
+#### pytorch weights 下載：[link](https://83516952-my.sharepoint.com/:f:/g/personal/eddie_hsiao_insign-medical_com/ElBW98W59IRFn0qhxtvYL0YBx9fSzvSwTKMFjFyc2p1e6g?e=EgAuHj)
 ```bash
-python3 toTRT/yolo2trt.py --yoloPath /home/insign/Doc/insign/flexible-yolov5/Polyp/AI_box_0706_toTRT/weights/best.pt
+python3 toTRT/yolo2trt.py --yoloPath yolo/weight/path
 ```
 會儲存兩個權重檔
 - toTRT/MorphYolo_backbone.pth
@@ -43,11 +44,12 @@ python3 toTRT/yolo2trt.py --yoloPath /home/insign/Doc/insign/flexible-yolov5/Pol
 
 ### 將 maskRCNN 權重轉換成 tensorRT
 ```bash
-python3 toTRT/maskrcnn.py --maskPath /home/insign/Doc/insign/Mask_yolo/run/0921/best.pt
+python3 toTRT/maskrcnn.py --maskPath maskrcnn/weight/path
 ```
 會儲存三個權重檔
 - toTRT/featurealign.pth
 - toTRT/roipool.pth
 - toTRT/headdetector.pth
 
+[validation data](https://83516952-my.sharepoint.com/:f:/g/personal/eddie_hsiao_insign-medical_com/EnkRfcBYwc5Esu60mPMG3KsBZ7mz5NZ9x9-igITwBQRFjw?e=dqYz93)
 
