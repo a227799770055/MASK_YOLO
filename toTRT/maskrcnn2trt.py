@@ -65,10 +65,10 @@ if __name__ == '__main__':
 
     weight_path = opt.maskPath
     model = torch.load(weight_path).eval().to('cuda')
-
-    feat1 = torch.rand((1,256,80,80)).to('cuda')
-    feat2 = torch.rand((1,512,40,40)).to('cuda')
-    feat3 = torch.rand((1,1024,20,20)).to('cuda')
+    # img shape = 480*480
+    feat1 = torch.rand((1,256,60,60)).to('cuda')
+    feat2 = torch.rand((1,512,30,30)).to('cuda')
+    feat3 = torch.rand((1,1024,15,15)).to('cuda')
     boxes = torch.rand((1,4)).to('cuda')
 
     # Feature align 2 TRT
@@ -91,7 +91,7 @@ if __name__ == '__main__':
             features[i] = j
 
     # ROI pooling
-    image_shapes = [(640,640)]
+    image_shapes = [(480,480)]
     roipool = model.mask_roi_pool
     torch.save(roipool, 'toTRT/roipool.pth')
 

@@ -102,11 +102,11 @@ class ROIHeadsMask(nn.Module):
         features_1,
         features_2,
         proposals,
-        image_shapes=[(640,640)],
+        image_shapes=[(480,480)],
         targets=None):
 
         mask_proposals = [proposals]
-        
+    
         features_0 = self.featurealign1(features_0)
         features_1 = self.featurealign2(features_1)
         features_2 = self.featurealign3(features_2)

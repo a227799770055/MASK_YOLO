@@ -71,11 +71,12 @@ if __name__ == '__main__':
     weight_path = opt.yoloPath
 
     model = torch.load(weight_path)['model']
+    print(model)
     model_backbone = model.backbone
     model_fpn = model.fpn
     model_pan = model.pan
     model_head = model.detection
-    x = torch.ones((64,3,320,320)).cuda()
+    x = torch.ones((64,3,480,480)).cuda()
     model_feature_map = model_concat(model_backbone, model_fpn, model_pan).eval().cuda()
 
     #transfer torch to trt weight and save as pth

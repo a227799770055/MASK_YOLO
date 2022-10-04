@@ -168,7 +168,7 @@ def mask_ploting(mask, framecopy, boxes):
             continue
         ellipse = cv2.fitEllipse(contours[i])
         ellipse, ellipse[1] = list(ellipse), list(ellipse[1])
-        ellipse[1][0], ellipse[1][1] = ellipse[1][0]*0.8, ellipse[1][1]*0.8
+        ellipse[1][0], ellipse[1][1] = ellipse[1][0], ellipse[1][1]
         if np.isnan(ellipse[1][0]) or np.isnan(ellipse[1][1]):
             continue
         retval.append(ellipse)
@@ -247,8 +247,7 @@ def video_detect(video_path, save_path, config):
             frameID += 1
             out.write(framecopy)
             out2.write(mask_bg)
-            # cv2.imshow('frame', framecopy)
-            print('FPS = {}'.format((end-start)*1000))
+            cv2.imshow('frame', framecopy)
             if cv2.waitKey(1) == ord('q'):
                 break
 
@@ -263,6 +262,7 @@ def video_detect(video_path, save_path, config):
             errMsg = "File \"{}\", line {}, in {}: [{}] {}".format(fileName, lineNum, funcName, error_class, detail)
             print(errMsg)
             break
+    
     cap.release()
     cv2.destroyAllWindows()
 

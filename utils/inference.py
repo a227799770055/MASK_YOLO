@@ -15,7 +15,7 @@ from torchvision import transforms
 def image_loading(img_path):
     image = cv2.imread(str(img_path))
     img_h, img_w = image.shape[0], image.shape[1]
-    image = letterbox(image, new_shape=640)[0]
+    image = letterbox(image, new_shape=480)[0]
     im0s = deepcopy(image)
     image = image[:, :, ::-1].transpose(2, 0, 1)
     image = np.ascontiguousarray(image)
@@ -30,7 +30,7 @@ def merge_mask_image(mask, im0s, name, retval):
     det = im0s[int(boxes[0][1]):int(boxes[0][1]+mask_h), int(boxes[0][0]):int(boxes[0][0]+mask_w)]
     retval_bg = np.zeros((det.shape[0], det.shape[1],3), np.uint8)
     for i in range(len(retval)):
-        retval_bg = cv2.ellipse(retval_bg, retval[i], (0, 0, 255), thickness=-1)
+        retval_bg = cv2.ellipse(retval_bg, retval[i], (255, 255, 255), thickness=-1)
     # a = cv2.addWeighted(retval_bg,0.5 ,mask, 0.5, 0)
     mask = mask+retval_bg
     det = cv2.addWeighted(det,0.7 ,mask, 0.3, 0)
@@ -47,6 +47,7 @@ def model_detection(image, yolo, mask_head, cfg):
         return [], [], []
     feature_map = featuremapPack(pred['feature_map']) #   extract feature map and boxes
     f1,f2,f3 = pred['feature_map'][0], pred['feature_map'][1],pred['feature_map'][2]
+    print(f1.shape, f2.shape, f3.shape)
     cv2.rectangle(im0s, (int(boxes[0][0]), int(boxes[0][1])), (int(boxes[0][2]), int(boxes[0][3])), (0, 255, 0), 2)
 
     #   Resize to bounding box
