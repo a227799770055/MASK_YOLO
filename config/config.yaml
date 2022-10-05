@@ -2,11 +2,11 @@ totrt: False
 
 # yolo 權重路徑
 model:
-  weight: 'weights/yolo_best.pt'
+  weight: 'weights/1005/yolo_best.pt'
 
 # maskrcnn 權重路徑
 maskrcnn:
-  weight: 'weights/maskrcnn_best.pt'
+  weight: 'weights/0915/maskrcnn_best.pt'
 
 nms:
   conf_thres: 0.5

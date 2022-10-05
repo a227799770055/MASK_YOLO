@@ -15,7 +15,7 @@ from torchvision import transforms
 def image_loading(img_path):
     image = cv2.imread(str(img_path))
     img_h, img_w = image.shape[0], image.shape[1]
-    image = letterbox(image, new_shape=480)[0]
+    image = letterbox(image, new_shape=640)[0]
     im0s = deepcopy(image)
     image = image[:, :, ::-1].transpose(2, 0, 1)
     image = np.ascontiguousarray(image)

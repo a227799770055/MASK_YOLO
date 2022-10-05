@@ -82,7 +82,7 @@ class SegmentDataset(VisionDataset):
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
             #   image manipulate
             image = cv2.imread(str(image_path))
-            image = letterbox(image, new_shape=640)[0]
+            image = letterbox(image, new_shape=480)[0]
             image = image[:, :, ::-1].transpose(2, 0, 1)
             image = np.ascontiguousarray(image)
             image = torch.from_numpy(image).to(device)
@@ -91,7 +91,7 @@ class SegmentDataset(VisionDataset):
             
             #   mask manipulate
             mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
-            mask = cv2.resize(mask, (640,640), interpolation=cv2.INTER_LINEAR)
+            mask = cv2.resize(mask, (480,480), interpolation=cv2.INTER_LINEAR)
             mask = torch.from_numpy(mask).to(device)
             mask = mask.float()
             mask /= 255.0

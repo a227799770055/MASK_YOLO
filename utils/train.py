@@ -1,4 +1,4 @@
-import sys
+import sys, os
 sys.path.append('.')
 import datetime, time, copy, yaml
 import wandb
@@ -96,11 +96,12 @@ def train_model(model, yolo, dataloader, criterion, optimizer, num_epochs=30):
 
 if __name__ == '__main__':
     today = datetime.date.today()
+
     wandb.init(project="YOLO_Mask Polyp {}_".format(today))
 
-    yolo_cfg = 'config/config.yaml'
+    config = 'config/config.yaml'
     
-    with open(yolo_cfg, 'r') as f:
+    with open(config, 'r') as f:
         cfg = yaml.load(f, Loader=yaml.Loader)
     
     root = cfg['data']['root']

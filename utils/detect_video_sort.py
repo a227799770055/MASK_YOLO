@@ -273,7 +273,7 @@ def parse_opt():
     parser.add_argument(
         '--cfgPath',
         type=str,
-        default='config/configtrt.yaml',
+        default='config/config.yaml',
         help='path of the config.'
     )
     parser.add_argument(
