@@ -132,11 +132,24 @@ def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110):
     y = int(boxes[0][1])
     h = int(boxes[0][3] - boxes[0][1])
     w = int(boxes[0][2] - boxes[0][0])
+    text_color = (0, 0, 0)
     px = int(x + (w / 2))
     py = int(y + (h / 2))
     img = cv2.circle(img, (px,py), radius=5, color=(255, 0, 0), thickness=-1)
-    text = "d: " + str(round(depth[px][py] * 16.0, 1))  + 'cm'
-    img = cv2.putText(img, text, (px, py), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 1, cv2.LINE_AA)
+    # d
+    target_d = depth[px][py] * 16.0
+    text = "d:" + str(round(target_d, 1))  + 'cm'
+    img = cv2.putText(img, text, (px, py), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
+    # w, h
+    img_w = img.shape[0]
+    img_h = img.shape[1]
+    
+    theta_x = (w / 2 /img_w) * (FOV_W / 180.) * np.pi
+    theta_y = (h / 2 /img_h) * (FOV_H / 180.) * np.pi
+    target_w = target_d * np.tanh(theta_x) * 2.
+    target_h = target_d * np.tanh(theta_y) * 2.
+    text = "w:" + str(round(target_w, 1))  + 'cm' + ',h:' + str(round(target_h, 1))  + 'cm'
+    img = cv2.putText(img, text, (px, py + 30), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
     return img
     
 if __name__ == '__main__':
