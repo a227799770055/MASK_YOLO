@@ -7,3 +7,8 @@ run
 result
 video
 weights
+
+wandb/
+data/
+__pycache__/
+*.pyc
