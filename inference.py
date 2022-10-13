@@ -127,7 +127,7 @@ def getFake():
     meta['to_rgb'] = True
     return meta
 
-def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110):
+def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110, di = 2):
     x = int(boxes[0][0])
     y = int(boxes[0][1])
     h = int(boxes[0][3] - boxes[0][1])
@@ -137,8 +137,8 @@ def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110):
     py = int(y + (h / 2))
     img = cv2.circle(img, (px,py), radius=5, color=(255, 0, 0), thickness=-1)
     # d
-    target_d = depth[px][py] * 16.0
-    text = "d:" + str(round(target_d, 1))  + 'cm'
+    target_d = depth[px][py]
+    text = "d:" + str(round(target_d, di))  + 'cm'
     img = cv2.putText(img, text, (px, py), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
     # w, h
     img_w = img.shape[0]
@@ -148,7 +148,7 @@ def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110):
     theta_y = (h / 2 /img_h) * (FOV_H / 180.) * np.pi
     target_w = target_d * np.tanh(theta_x) * 2.
     target_h = target_d * np.tanh(theta_y) * 2.
-    text = "w:" + str(round(target_w, 1))  + 'cm' + ',h:' + str(round(target_h, 1))  + 'cm'
+    text = "w:" + str(round(target_w, di))  + 'cm' + ',h:' + str(round(target_h, di))  + 'cm'
     img = cv2.putText(img, text, (px, py + 30), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
     return img
     
