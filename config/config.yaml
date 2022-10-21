@@ -12,6 +12,8 @@ maskrcnn:
 depth:
   config: './data/depthformer_swint_w7_endoscopy.py'
   weight: './data/depth_best_weight.pth'
+  FOV_H: 140
+  FOV_W: 140
 
 nms:
   conf_thres: 0.5
