@@ -90,13 +90,13 @@ def model_detection(image, yolo, mask_head, cfg):
 
 # dpeth
 def depth_estimation(image, model, depth_cfg):
-    # model = MMDataParallel(model, device_ids=[0])
-    model.eval()
+    origin_w, origin_h = image.shape[3], image.shape[2]
     resize_to_512 = transforms.Compose([transforms.Resize((512, 512))])
     with torch.no_grad():
         input_img = resize_to_512(image)
-        result = model(img = [input_img], img_metas = [[getFake()]], return_loss=False)[0][0]
-        result = cv2.resize(result, dsize=(640, 640), interpolation=cv2.INTER_CUBIC)
+
+        result = model(img = [input_img])[0][0]
+        result = cv2.resize(result, dsize=(origin_w, origin_h), interpolation=cv2.INTER_CUBIC)
     return result
 
 def load_depth_cfg(path):
@@ -112,6 +112,7 @@ def load_depth_model(cfg, pth_path):
         cfg.model,
         test_cfg=cfg.get('test_cfg'))
     checkpoint = load_checkpoint(model, pth_path)
+    model.eval()
     return model
 
 def getFake():
@@ -158,8 +159,11 @@ def plotRealTargetSize(img, boxes, depth, FOV_W=140, FOV_H=140, decimal = 2):
     target_h = target_d * np.tanh(theta_y) * 2.
 
     # msg
-    text = "w:" + str(round(target_w, decimal))  + 'cm' + ',h:' + str(round(target_h, decimal))  + 'cm'
-    img = cv2.putText(img, text, (px, py + 30), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
+    shiftPix = 30
+    text = 'h:' + str(round(target_h, decimal))  + 'cm'
+    img = cv2.putText(img, text, (px, py + shiftPix), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
+    text = "w:" + str(round(target_w, decimal))  + 'cm'
+    img = cv2.putText(img, text, (px, py + (shiftPix * 2)), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
     return img
     
 if __name__ == '__main__':

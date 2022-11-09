@@ -94,8 +94,37 @@ class BaseDepther(BaseModule, metaclass=ABCMeta):
         else:
             return self.aug_test(imgs, img_metas, **kwargs)
 
+    # @auto_fp16(apply_to=('img', ))
+    # def forward(self, img, img_metas, return_loss=True, **kwargs):
+    #     """Calls either :func:`forward_train` or :func:`forward_test` depending
+    #     on whether ``return_loss`` is ``True``.
+
+    #     Note this setting will change the expected inputs. When
+    #     ``return_loss=True``, img and img_meta are single-nested (i.e. Tensor
+    #     and List[dict]), and when ``resturn_loss=False``, img and img_meta
+    #     should be double nested (i.e.  List[Tensor], List[List[dict]]), with
+    #     the outer list indicating test time augmentations.
+    #     """
+    #     if return_loss:
+    #         return self.forward_train(img, img_metas, **kwargs)
+    #     else:
+    #         return self.forward_test(img, img_metas, **kwargs)
+    
+    def getFakeMeta(self, img_shape = (512, 512, 3)):
+        meta = dict()
+        meta['filename'] = 'test.png'
+        meta['ori_filename'] = 'test.png'
+        meta['ori_shape'] = img_shape
+        meta['img_shape'] = img_shape
+        meta['pad_shape'] = img_shape
+        meta['scale_factor'] = [1., 1., 1., 1.]
+        meta['flip'] = False
+        meta['flip_direction'] = 'horizontal'
+        meta['to_rgb'] = True
+        return [[meta]]
+
     @auto_fp16(apply_to=('img', ))
-    def forward(self, img, img_metas, return_loss=True, **kwargs):
+    def forward(self, img, return_loss=False, **kwargs):
         """Calls either :func:`forward_train` or :func:`forward_test` depending
         on whether ``return_loss`` is ``True``.
 
@@ -105,6 +134,7 @@ class BaseDepther(BaseModule, metaclass=ABCMeta):
         should be double nested (i.e.  List[Tensor], List[List[dict]]), with
         the outer list indicating test time augmentations.
         """
+        img_metas = self.getFakeMeta()
         if return_loss:
             return self.forward_train(img, img_metas, **kwargs)
         else:
