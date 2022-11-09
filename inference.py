@@ -115,18 +115,6 @@ def load_depth_model(cfg, pth_path):
     model.eval()
     return model
 
-def getFake():
-    meta = dict()
-    meta['filename'] = 'test.png'
-    meta['ori_filename'] = 'test.png'
-    meta['ori_shape'] = (512, 512, 3)
-    meta['img_shape'] = (512, 512, 3)
-    meta['pad_shape'] = (512, 512, 3)
-    meta['scale_factor'] = [1., 1., 1., 1.]
-    meta['flip'] = False
-    meta['flip_direction'] = 'horizontal'
-    meta['to_rgb'] = True
-    return meta
 
 def evalDepthPose(depth, px, py):
     for i in range(10):
