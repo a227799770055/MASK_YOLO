@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"name": "Mask_yolo",
+			"path": "../.."
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}

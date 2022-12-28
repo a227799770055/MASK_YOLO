@@ -168,7 +168,7 @@ class DepthEncoderDecoder(BaseDepther):
             # our inference backend only support 4D output
             depth_pred = depth_pred.unsqueeze(0)
             return depth_pred
-        depth_pred = depth_pred.cpu().numpy()
+        depth_pred = depth_pred.cpu().detach().numpy()
         # unravel batch dim
         depth_pred = list(depth_pred)
         return depth_pred

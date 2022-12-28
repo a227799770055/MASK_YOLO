@@ -11,7 +11,9 @@ maskrcnn:
 # depth
 depth:
   config: './data/depthformer_swint_w7_endoscopy.py'
-  weight: './data/depth_best_weight.pth'
+  weight: '/home/insign/Doc/insign/Monocular-Depth-Estimation-Toolbox/checkpoints/depthformer_endoscopy_scale16_fake/best_abs_rel_iter_14400.pth'
+  FOV_H: 140
+  FOV_W: 140
 
 nms:
   conf_thres: 0.5

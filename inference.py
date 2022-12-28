@@ -23,6 +23,10 @@ from depth.apis import multi_gpu_test, single_gpu_test
 from depth.datasets import build_dataloader, build_dataset
 from depth.models import build_depther
 
+# inference api
+from depth.apis.inference import inference_depther, init_depther
+
+
 def image_loading(img_path):
     image = cv2.imread(str(img_path))
     img_h, img_w = image.shape[0], image.shape[1]
@@ -36,7 +40,7 @@ def image_loading(img_path):
     
     return image, im0s, img_h, img_w
 
-def merge_mask_image(mask, im0s, name, retval):
+def merge_mask_image(mask, im0s, retval):
     mask_h, mask_w = mask.shape[0], mask.shape[1]
     det = im0s[int(boxes[0][1]):int(boxes[0][1]+mask_h), int(boxes[0][0]):int(boxes[0][0]+mask_w)]
     retval_bg = np.zeros((det.shape[0], det.shape[1],3), np.uint8)
@@ -58,7 +62,6 @@ def model_detection(image, yolo, mask_head, cfg):
         return [], [], []
     feature_map = featuremapPack(pred['feature_map']) #   extract feature map and boxes
     f1,f2,f3 = pred['feature_map'][0], pred['feature_map'][1],pred['feature_map'][2]
-    print(f1.shape, f2.shape, f3.shape)
     cv2.rectangle(im0s, (int(boxes[0][0]), int(boxes[0][1])), (int(boxes[0][2]), int(boxes[0][3])), (0, 255, 0), 2)
 
     #   Resize to bounding box
@@ -76,7 +79,7 @@ def model_detection(image, yolo, mask_head, cfg):
     mask_logits = mask_logits*255
     mask_logits = cv2.cvtColor(mask_logits, cv2.COLOR_GRAY2RGB)
 
-    contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     retval = []
     for i in range(len(contours)):
         if contours[i].shape[0]<5: # filter the number of points under five
@@ -91,13 +94,12 @@ def model_detection(image, yolo, mask_head, cfg):
 
 # dpeth
 def depth_estimation(image, model, depth_cfg):
-    # model = MMDataParallel(model, device_ids=[0])
-    model.eval()
+    origin_w, origin_h = image.shape[3], image.shape[2]
     resize_to_512 = transforms.Compose([transforms.Resize((512, 512))])
     with torch.no_grad():
         input_img = resize_to_512(image)
-        result = model(img = [input_img], img_metas = [[getFake()]], return_loss=False)[0][0]
-        result = cv2.resize(result, dsize=(640, 640), interpolation=cv2.INTER_CUBIC)
+        result = model(img = [input_img])[0][0]
+        result = cv2.resize(result, dsize=(origin_w, origin_h), interpolation=cv2.INTER_CUBIC)
     return result
 
 def load_depth_cfg(path):
@@ -113,22 +115,16 @@ def load_depth_model(cfg, pth_path):
         cfg.model,
         test_cfg=cfg.get('test_cfg'))
     checkpoint = load_checkpoint(model, pth_path)
+    model.eval()
     return model
 
-def getFake():
-    meta = dict()
-    meta['filename'] = 'test.png'
-    meta['ori_filename'] = 'test.png'
-    meta['ori_shape'] = (512, 512, 3)
-    meta['img_shape'] = (512, 512, 3)
-    meta['pad_shape'] = (512, 512, 3)
-    meta['scale_factor'] = [1., 1., 1., 1.]
-    meta['flip'] = False
-    meta['flip_direction'] = 'horizontal'
-    meta['to_rgb'] = True
-    return meta
 
-def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110):
+def evalDepthPose(depth, px, py):
+    for i in range(10):
+        depth[py + i - 5][px + i - 5] = 0.
+        depth[py + i - 5][px - i + 5] = 0.
+
+def plotRealTargetSize(img, boxes, depth, FOV_W=140, FOV_H=140, decimal = 2):
     x = int(boxes[0][0])
     y = int(boxes[0][1])
     h = int(boxes[0][3] - boxes[0][1])
@@ -138,8 +134,11 @@ def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110):
     py = int(y + (h / 2))
     img = cv2.circle(img, (px,py), radius=5, color=(255, 0, 0), thickness=-1)
     # d
-    target_d = depth[px][py] * 16.0
-    text = "d:" + str(round(target_d, 1))  + 'cm'
+    target_d = depth[py][px]
+
+    # evalDepthPose(depth, px, py)
+
+    text = "d:" + str(round(target_d, decimal))  + 'cm'
     img = cv2.putText(img, text, (px, py), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
     # w, h
     img_w = img.shape[0]
@@ -149,12 +148,32 @@ def plotRealTargetSize(img, boxes, depth, FOV_W=110, FOV_H=110):
     theta_y = (h / 2 /img_h) * (FOV_H / 180.) * np.pi
     target_w = target_d * np.tanh(theta_x) * 2.
     target_h = target_d * np.tanh(theta_y) * 2.
-    text = "w:" + str(round(target_w, 1))  + 'cm' + ',h:' + str(round(target_h, 1))  + 'cm'
-    img = cv2.putText(img, text, (px, py + 30), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
+
+    # msg
+    shiftPix = 30
+    text = 'h:' + str(round(target_h, decimal))  + 'cm'
+    img = cv2.putText(img, text, (px, py + shiftPix), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
+    text = "w:" + str(round(target_w, decimal))  + 'cm'
+    img = cv2.putText(img, text, (px, py + (shiftPix * 2)), cv2.FONT_HERSHEY_SIMPLEX, 1, text_color, 2, cv2.LINE_AA)
     return img
+
+def np_normalize(image, 
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375]):
+    image = image * 255
+    image = image.to('cpu')
+    image = image.squeeze(0)
+    image = image.numpy()
+    image = np.transpose(image, (1,2,0))
+    image = (image - mean) / std
+    image = np.transpose(image, (2,0,1))
+    image = torch.tensor(image)
+    image = image.unsqueeze(0)
+    image = image.to('cuda', dtype=torch.float)
+    return image
     
 if __name__ == '__main__':
-    imgDir = 'data/Validate'
+    imgDir = 'Polyp/Validate'
     cfgPath = 'config/config.yaml'
     
     #   Loading cfg
@@ -190,15 +209,29 @@ if __name__ == '__main__':
 
         #   prediction
         boxes, mask_logits, retval = model_detection(image, yolo, mask_head, cfg)
-        depth_val = depth_estimation(image, depthformer_net, depth_cfg)
-        cv2.imwrite('{}/{}_dpeth.jpg'.format(save_dir, name), depth_val * 255.)
+        sd = time.time()
+        depth_img = np_normalize(image)
+        depth_val = depth_estimation(depth_img, depthformer_net, depth_cfg)
+        ed = time.time()
+        print('Total Time Depth = {} ms'.format((ed-sd)*1000))
+        
+        
         if len(boxes) != 0:
             #   Merge mask and image
-            im0s = merge_mask_image(mask=mask_logits, im0s=im0s, name=name, retval=retval)
-            im0s = plotRealTargetSize(im0s, boxes, depth_val)
+            im0s = merge_mask_image(mask=mask_logits, im0s=im0s, retval=retval)
+            # im0s = plotRealTargetSize(im0s, boxes, depth_val, cfg['depth']['FOV_W'], cfg['depth']['FOV_H'])
             cv2.imwrite('{}/{}_det.jpg'.format(save_dir, name),im0s)
+            
+            #output depth image
+            depth_show = (depth_val / depth_val.max() * 255.).astype(np.uint8)
+            depth_show = cv2.applyColorMap(depth_show, cv2.COLORMAP_PLASMA)
+            # depth_show = merge_mask_image(mask=mask_logits, im0s=depth_show, retval=retval)
+            depth_show = plotRealTargetSize(depth_show, boxes, depth_val, cfg['depth']['FOV_W'], cfg['depth']['FOV_H'])
+            cv2.imwrite('{}/{}_dpeth.jpg'.format(save_dir, name), depth_show)
         else:
             print("-"*15)
             print("Do not detect polyp")
+            cv2.imwrite('{}/{}_det.jpg'.format(save_dir, name),im0s)
+        
         e = time.time()
         print('Total Time Duration = {} ms'.format((e-s)*1000))

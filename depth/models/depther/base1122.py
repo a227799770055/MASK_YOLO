@@ -94,6 +94,18 @@ class BaseDepther(BaseModule, metaclass=ABCMeta):
         else:
             return self.aug_test(imgs, img_metas, **kwargs)
 
+    def forward_test_single(self, imgs, img_meta, **kwargs):
+        """
+        Args:
+            imgs (List[Tensor]): the outer list indicates test-time
+                augmentations and inner Tensor should have a shape NxCxHxW,
+                which contains all images in the batch.
+            img_metas (List[List[dict]]): the outer list indicates test-time
+                augs (multiscale, flip, etc.) and the inner list indicates
+                images in a batch.
+        """
+        return self.simple_test(imgs, img_meta, **kwargs)
+
     # @auto_fp16(apply_to=('img', ))
     # def forward(self, img, img_metas, return_loss=True, **kwargs):
     #     """Calls either :func:`forward_train` or :func:`forward_test` depending
@@ -121,10 +133,10 @@ class BaseDepther(BaseModule, metaclass=ABCMeta):
         meta['flip'] = False
         meta['flip_direction'] = 'horizontal'
         meta['to_rgb'] = True
-        return [[meta]]
+        return [meta]
 
     @auto_fp16(apply_to=('img', ))
-    def forward(self, img, return_loss=False, **kwargs):
+    def forward(self, img, **kwargs):
         """Calls either :func:`forward_train` or :func:`forward_test` depending
         on whether ``return_loss`` is ``True``.
 
@@ -134,11 +146,8 @@ class BaseDepther(BaseModule, metaclass=ABCMeta):
         should be double nested (i.e.  List[Tensor], List[List[dict]]), with
         the outer list indicating test time augmentations.
         """
-        img_metas = self.getFakeMeta()
-        if return_loss:
-            return self.forward_train(img, img_metas, **kwargs)
-        else:
-            return self.forward_test(img, img_metas, **kwargs)
+        img_meta = self.getFakeMeta()
+        return self.forward_test_single(img, img_meta, **kwargs)
 
     def train_step(self, data_batch, optimizer, **kwargs):
         """The iteration step during training.

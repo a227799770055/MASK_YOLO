@@ -1,6 +1,8 @@
 from copy import deepcopy
 from genericpath import isdir
 import sys
+from centroidtracker import CentroidTrackers    #1123
+
 sys.path.append('.')
 import torch
 import cv2
@@ -192,15 +194,14 @@ def video_detect(video_path, save_path, config):
     fps = cap.get(cv2.CAP_PROP_FPS)
     height, width = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     video_name = (video_path.split('/')[-1]).split('.')[0]
-    out = cv2.VideoWriter(os.path.join(save_path, '{}.avi'.format(video_name)), fourcc, fps, (height,width))
-    out2 = cv2.VideoWriter(os.path.join(save_path, '{}_mask.avi'.format(video_name)), fourcc, fps, (height,width))
+    out = cv2.VideoWriter(os.path.join(save_path, '{}.avi'.format(video_name)), fourcc, fps, (width,height))
+    out2 = cv2.VideoWriter(os.path.join(save_path, '{}_mask.avi'.format(video_name)), fourcc, fps, (width,height))
     frameID = 0
     temp_id = {}
     temp_bbs = []
 
     Detector = VideoDetector(config=config)
-    mot_tracker = Sort()
-
+    cen = CentroidTrackers() #1123
     while cap.isOpened():
         try:
             start = time.time()
@@ -215,39 +216,38 @@ def video_detect(video_path, save_path, config):
                         rect = []
                         for i in bbox:
                             rect.append(i)
-                        rect.append(score)
+                        # rect.append(score)
                         rects.append(rect)
-            if len(rects) != 0:
-                track_bbs_ids = mot_tracker.update(np.array(rects))
-            else:
-                track_bbs_ids = mot_tracker.update()
-            print(rects)
-            for i in track_bbs_ids:
-                x0 = int(i[0])
-                y0 = int(i[1])
-                x1 = int(i[2])
-                y1 = int(i[3])
-                objectID = i[4]
-                if objectID not in temp_id:
-                    temp_id[objectID] = 0
-                elif objectID in temp_id and temp_id[objectID]%2 == 0:
-                    temp_id.update({objectID:temp_id[objectID]+1})
-                else:
-                    temp_id.update({objectID:temp_id[objectID]+1})
-                if temp_id[objectID] == 0:
-                    temp_bbs = [x0, y0, x1, y1]
-                    cv2.rectangle(framecopy, (int(temp_bbs[0]), int(temp_bbs[1])), (int(temp_bbs[2]), int(temp_bbs[3])), (0, 255, 0), 3, 1)
-                    bboxes = [temp_bbs]
-                    # mask_bg = mask_ploting(masks, framecopy, [temp_bbs]) 
-                    cv2.putText(framecopy, str(objectID), (int((x1+x0)/2),int((y1+y0)/2)), cv2.FONT_HERSHEY_SIMPLEX,
-                                1, (255,0,0), 2, cv2.LINE_AA)
-                elif temp_id[objectID] > 0:
-                    temp_bbs = calculateOffset(temp_bbs, i[0:4])
-                    cv2.rectangle(framecopy, (int(temp_bbs[0]), int(temp_bbs[1])), (int(temp_bbs[2]), int(temp_bbs[3])), (0, 255, 0), 3, 1)
-                    bboxes = [temp_bbs]
-                    # mask_bg = mask_ploting(masks, framecopy, [temp_bbs])
-                    cv2.putText(framecopy, str(objectID), (int((x1+x0)/2),int((y1+y0)/2)), cv2.FONT_HERSHEY_SIMPLEX,
-                                1, (255,0,0), 2, cv2.LINE_AA)
+            
+            objects = cen.update(rects) #1123
+            if len(rects) != 0: #1123 下面縮排
+                for objectID, center in objects.items():
+                    x0 = int(center[2])
+                    y0 = int(center[3])
+                    x1 = int(center[4])
+                    y1 = int(center[5])
+                    objectID = objectID
+                    if objectID not in temp_id:
+                        temp_id[objectID] = 0
+                    elif objectID in temp_id and temp_id[objectID]%2 == 0:
+                        temp_id.update({objectID:temp_id[objectID]+1})
+                    else:
+                        temp_id.update({objectID:temp_id[objectID]+1})
+                    if temp_id[objectID] == 0:
+                        temp_bbs = [x0, y0, x1, y1]
+                        cv2.rectangle(framecopy, (int(temp_bbs[0]), int(temp_bbs[1])), (int(temp_bbs[2]), int(temp_bbs[3])), (0, 255, 0), 3, 1)
+                        bboxes = [temp_bbs]
+                        # mask_bg = mask_ploting(masks, framecopy, [temp_bbs]) 
+                        cv2.putText(framecopy, str(objectID), (int((x1+x0)/2),int((y1+y0)/2)), cv2.FONT_HERSHEY_SIMPLEX,
+                                    1, (255,0,0), 2, cv2.LINE_AA)
+                    elif temp_id[objectID] > 0:
+                        temp_bbs = calculateOffset(temp_bbs, center[2:6])
+                        cv2.rectangle(framecopy, (int(temp_bbs[0]), int(temp_bbs[1])), (int(temp_bbs[2]), int(temp_bbs[3])), (0, 255, 0), 3, 1)
+                        bboxes = [temp_bbs]
+                        # mask_bg = mask_ploting(masks, framecopy, [temp_bbs])
+                        cv2.putText(framecopy, str(objectID), (int((x1+x0)/2),int((y1+y0)/2)), cv2.FONT_HERSHEY_SIMPLEX,
+                                    1, (255,0,0), 2, cv2.LINE_AA)
+
             end = time.time()
             frameID += 1
             out.write(framecopy)
@@ -270,10 +270,11 @@ def video_detect(video_path, save_path, config):
     
     cap.release()
     cv2.destroyAllWindows()
+    print('Finish...')
 
 def parse_opt():
     parser = argparse.ArgumentParser(
-        prog="detector_video_sort.py",
+        prog="detector_video_cent.py",
     )
     parser.add_argument(
         '--cfgPath',

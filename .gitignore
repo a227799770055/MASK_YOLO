@@ -12,3 +12,6 @@ wandb/
 data/
 __pycache__/
 *.pyc
+*.onnx
+*.pth
+.venv

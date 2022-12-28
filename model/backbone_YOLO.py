@@ -5,7 +5,7 @@ sys.path.append('./model')
 import cv2
 from od.data.datasets import letterbox
 import numpy as np
-from model.utils.modelpacking import yoloModelPack
+from utils.modelpacking import yoloModelPack
 import yaml
 from utils.general import *    
 import json

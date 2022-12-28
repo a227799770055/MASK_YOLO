@@ -2,8 +2,8 @@ from scipy.spatial import distance as dist
 from collections import OrderedDict
 import numpy as np
 
-class CentroidTracker():
-	def __init__(self, maxDisappeared=10):
+class CentroidTrackers():
+	def __init__(self, maxDisappeared=60):
 		# initialize the next unique object ID along with two ordered
 		# dictionaries used to keep track of mapping a given object
 		# ID to its centroid and number of consecutive frames it has
@@ -50,14 +50,14 @@ class CentroidTracker():
 			return self.objects
 
 		# initialize an array of input centroids for the current frame
-		inputCentroids = np.zeros((len(rects), 2), dtype="int")
+		inputCentroids = np.zeros((len(rects), 6), dtype="int")
 
 		# loop over the bounding box rectangles
 		for (i, (startX, startY, endX, endY)) in enumerate(rects):
 			# use the bounding box coordinates to derive the centroid
 			cX = int((startX + endX) / 2.0)
 			cY = int((startY + endY) / 2.0)
-			inputCentroids[i] = (cX, cY)
+			inputCentroids[i] = (cX, cY, startX, startY, endX, endY)
 
 		# if we are currently not tracking any objects take the input
 		# centroids and register each of them
