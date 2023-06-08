@@ -2,11 +2,11 @@ totrt: False
 
 # yolo 權重路徑
 model:
-  weight: './data/yolo_best_weight.pt'
+  weight: './yolo_dataset/polyp_230522_add_negative_yolo.pt'
 
 # maskrcnn 權重路徑
 maskrcnn:
-  weight: './data/maskrcnn_best_weight.pt'
+  weight: './yolo_dataset/maskrcnn_best_weight.pt'
 
 # depth
 depth:
@@ -15,6 +15,10 @@ depth:
   FOV_H: 140
   FOV_W: 140
 
+# velocity (regression)
+velocity:
+    weight: '.yolo_dataset/velocity_weight.pt'
+
 nms:
   conf_thres: 0.5
   iou_thres: 0.5
@@ -22,9 +26,9 @@ nms:
   agnostic_nms: False
 
 data:
-  root: "Polyp"
-  img_dir: "Images"
-  mask_dir: "Masks"
+  root: "yolo_dataset"
+  img_dir: "Mask_poly/Images"
+  mask_dir: "Mask_poly/Masks"
 
 optimizer: "Adam"
 

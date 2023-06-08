@@ -97,7 +97,7 @@ def train_model(model, yolo, dataloader, criterion, optimizer, num_epochs=30):
 if __name__ == '__main__':
     today = datetime.date.today()
 
-    wandb.init(project="YOLO_Mask Polyp {}_".format(today))
+    wandb.init(project="YOLO_Mask Polyp", name = "train_{}".format(today))
 
     config = 'config/config.yaml'
     
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     yolo_backbone = model_manipulate(cfg['model']['weight']).eval().to(device)
 
     #   Loading mask_head
-    if cfg['maskrcnn']['weight']:
+    if os.path.isfile(cfg['maskrcnn']['weight']):        
         mask_wts = cfg['maskrcnn']['weight']
         mask_head = torch.load(mask_wts).to(device)
     else:
