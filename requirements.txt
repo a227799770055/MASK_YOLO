@@ -20,3 +20,4 @@ yacs==0.1.8
 mmcv==1.5.0
 mmcv-full==1.5.0
 prettytable>=3.4.1
+opencv-python==4.5.5.64
